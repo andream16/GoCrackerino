@@ -6,13 +6,31 @@ import (
 	"sync"
 	"os"
 	"bufio"
-	"unicode/utf8"
+	"runtime"
 )
 
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func MaxParallelism() int {
+	maxProcs := runtime.GOMAXPROCS(0)
+	numCPU := runtime.NumCPU()
+	if maxProcs < numCPU {
+		return maxProcs
+	}
+	return numCPU
 }
 
 func main() {
@@ -23,7 +41,7 @@ func main() {
 	//Arguments to get passed to the command
 	args := []string{"-s", "C330C9CBD01DFBA0", "E10C65124518DB05"}
 	//Array to contain common CipherTexts
-	found := make([]string, 6)
+	duplicates := make([]string, 0)
 
 	f, err := os.Create("store.txt")
 	check(err)
@@ -34,7 +52,8 @@ func main() {
 
 	//Spawning 4 goroutines
 	var wg sync.WaitGroup
-	for i := 0; i < 4; i++ {
+	cores := MaxParallelism()
+	for i := 0; i < cores; i++ {
 		wg.Add(1)
 		go func(num int, w *sync.WaitGroup) {
 			defer w.Done()
@@ -54,7 +73,7 @@ func main() {
 		}(i, &wg)
 	}
 	//Generate Tasks
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100000; i++ {
 		key := string(fmt.Sprintf("%06x", i))
 		tasks <- exec.Command(cmdEnc, args[0], key, args[1])
 		tasks <- exec.Command(cmdDec, args[0], key, args[2])
@@ -67,24 +86,25 @@ func main() {
 
 	r, _ := os.Open("store.txt")
 	scanner := bufio.NewScanner(r)
-	scanner.Split(bufio.ScanWords)
-	// Loop over all lines in the file and print them.
 	for scanner.Scan() {
 		line := scanner.Text()
-		if(utf8.RuneCountInString(line) == 6){
-		 currLine := line
-			for scanner.Scan(){
-				searchLine := scanner.Text()
-				if(utf8.RuneCountInString(searchLine) == 6){
-				 	if(currLine == searchLine){
-						found = append(found, currLine)
-					}
+		text := line[7:]
+		if !contains(duplicates, text) {
+			duplicates = append(duplicates, text)
+		} else {
+				t, _:= os.Open("store.txt")
+				dupScan := bufio.NewScanner(t)
+			        //currLine := dupScan.Text()
+				for dupScan.Scan() {
+				    currLine   := dupScan.Text()
+				    currCipher := currLine[7:23]
+				    if( currCipher == text ){
+					fmt.Println(currLine)
+				    }
 				}
+				t.Close()
 			}
-		}
 	}
-	fmt.Println(found)
 	//Close File
 	r.Close()
-
 }
