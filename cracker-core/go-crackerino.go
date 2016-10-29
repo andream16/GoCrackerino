@@ -3,25 +3,15 @@ package main
 import (
 	"fmt"
 	"os/exec"
-	"sync"
 	"os"
-	"bufio"
 	"runtime"
+	"sync"
 )
 
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
-}
-
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }
 
 func MaxParallelism() int {
@@ -35,13 +25,15 @@ func MaxParallelism() int {
 
 func main() {
 
-	//Bash Command
+	/** Bash Commands **/
 	cmdEnc  := "./encrypt"
 	cmdDec  := "./decrypt"
-	//Arguments to get passed to the command
+	awkCmd := "awk"
+	akwArgs := []string{"x[$2]++ == 1 { print $2 }", "store.txt"}
+	grepCmd := "grep"
+	grepArg := "store.txt"
+	//Arguments to get passed to the encryption/decryption
 	args := []string{"-s", "C330C9CBD01DFBA0", "E10C65124518DB05"}
-	//Array to contain common CipherTexts
-	duplicates := make([]string, 0)
 
 	f, err := os.Create("store.txt")
 	check(err)
@@ -50,7 +42,7 @@ func main() {
 	//Common Channel for the goroutines
 	tasks := make(chan *exec.Cmd, 64)
 
-	//Spawning 4 goroutines
+	//Spawning 8 goroutines
 	var wg sync.WaitGroup
 	cores := MaxParallelism()
 	for i := 0; i < cores; i++ {
@@ -61,7 +53,7 @@ func main() {
 				out []byte
 				err error
 			)
-			for cmd := range tasks { // this will exit the loop when the channel closes
+			for cmd := range tasks {
 				out, err = cmd.Output()
 				if err != nil {
 					fmt.Printf("Can't get stdout:", err)
@@ -73,38 +65,41 @@ func main() {
 		}(i, &wg)
 	}
 	//Generate Tasks
-	for i := 0; i < 100000; i++ {
+	for i := 0; i < 16777215; i++ {
 		key := string(fmt.Sprintf("%06x", i))
 		tasks <- exec.Command(cmdEnc, args[0], key, args[1])
 		tasks <- exec.Command(cmdDec, args[0], key, args[2])
 	}
 	close(tasks)
-	// wait for the workers to finish
+	// Wait for the workers to finish
 	wg.Wait()
 	f.Close()
 	fmt.Println("Done Writing Keys")
 
-	r, _ := os.Open("store.txt")
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		line := scanner.Text()
-		text := line[7:]
-		if !contains(duplicates, text) {
-			duplicates = append(duplicates, text)
-		} else {
-				t, _:= os.Open("store.txt")
-				dupScan := bufio.NewScanner(t)
-			        //currLine := dupScan.Text()
-				for dupScan.Scan() {
-				    currLine   := dupScan.Text()
-				    currCipher := currLine[7:23]
-				    if( currCipher == text ){
-					fmt.Println(currLine)
-				    }
-				}
-				t.Close()
-			}
+	//Execute Awk Command to find same CipherTexts By second Column in the File
+	var (
+		akwOut []byte
+		awkErr error
+	)
+	akwCommand := exec.Command(awkCmd, akwArgs[0], akwArgs[1])
+	akwOut, awkErr = akwCommand.Output()
+	if awkErr != nil {
+		fmt.Printf("Can't get stdout:", awkErr)
 	}
-	//Close File
-	r.Close()
+	awkS := string(akwOut[0:16])
+	fmt.Println(awkS)
+
+	//Executing Grep Command to find all the lines containing the Common CipherText
+	var (
+		grepOut []byte
+		grepErr error
+	)
+	grepCommand := exec.Command(grepCmd, awkS, grepArg)
+	grepOut, grepErr = grepCommand.Output()
+	if grepErr != nil {
+		fmt.Printf("Can't get stdout:", grepErr)
+	}
+	grepS := string(grepOut)
+	fmt.Println(grepS)
+
 }
