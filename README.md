@@ -17,7 +17,7 @@ This cracker was written in `Golang` since I needed to run both `Encryption` and
     - AWK  : ~4.0.1
     - Grep : ~2.x
     
-Download the project, run `make` on `ocaml` folder, two `executables` and more files will be generated.
+Download the project, extract the contents of `sp-network for challenge mitm.zip`, then run `make` on its folder, two `executables` and more files will be generated. Move `encrypt` and `decrypt` executables to the main project's folder or just make sure to specify their paths on `go-crackerino.go`.
 
 You can run `encryption` using: `./encrypt -s key cipherText` and `decryption` using `./decrypt -s key plainText`.
 
