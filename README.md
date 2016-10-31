@@ -1,7 +1,8 @@
-# GoCrackerino
+# GoCrackerino ![](https://stuff.mit.edu/afs/sipb/project/golang/arch/go1.2.1-linux-amd64/favicon.ico)
 ##Golang Key Cracker Which Implements Meet In the Middle Strategy.
 
-Given a known `cipher-text` and a known `plain-text`, it finds two keys `k1` and `k2` in a way that `Ek1(plain) == Dk2(cipher)`
+Given a known `cipher-text` and a known `plain-text`, it finds two keys `k1` and `k2` in a way that 
+`Ek1(plain) == Dk2(cipher)`
 where `E` is the encryption function and `D` is the decryption function.
 
 It tries all the possible keys in the range of `24/28/32 bits` and prints which are the keys to be used for the encryption and decryption.
