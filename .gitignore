@@ -1,6 +1,6 @@
-decrypt
-encrypt
+/decrypt
+/encrypt
 *.iml
 .idea/
 *.txt
-GoCrackerino.iml
+/GoCrackerino.iml
