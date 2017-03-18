@@ -1,5 +1,5 @@
 # GoCrackerino ![](https://stuff.mit.edu/afs/sipb/project/golang/arch/go1.2.1-linux-amd64/favicon.ico)
-##Golang Key Cracker Which Implements Meet In the Middle Strategy.
+## Golang Key Cracker Which Implements Meet In the Middle Strategy.
 
 Given a known `cipher-text` and a known `plain-text`, it finds two keys `k1` and `k2` in a way that 
 `Ek1(plain) == Dk2(cipher)`
@@ -11,7 +11,7 @@ Keys can only be `6/7/8 Digits HEX` and `Cipher/Plain` can only be `16 Digits HE
 
 This cracker was written in `Golang` since I needed to run both `Encryption` and `Decryption` in parallel and `goroutines` made it easy.
 
-#What you need to run the project:
+# What you need to run the project:
 
     - Go   : ~1.7
     - Ocaml: ~4.03.0
